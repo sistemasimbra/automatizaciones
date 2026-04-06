@@ -883,9 +883,73 @@ function navegar(direccion) {
 }
 
 function enviarEncuesta() {
-  document.getElementById('formulario').style.display = 'none';
-  document.getElementById('pantallaExito').style.display = 'block';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Recopilar todos los datos
+  const vi = document.getElementById('selNombre').value;
+  const nombre = vi !== '' ? empleados[vi].nombre : '—';
+  const cargo  = document.getElementById('campoCargo').value || '—';
+  const area   = document.getElementById('campoArea').value  || '—';
+
+  // Procesos
+  const procs = document.querySelectorAll('.proceso-item');
+  let procesosTexto = [];
+  procs.forEach(function(pr) {
+    const id = pr.id.replace('proc_', '');
+    const n = document.getElementById('pnombre_'    + id)?.value || '';
+    const s = document.getElementById('psistema_'   + id)?.value || '';
+    const t = document.getElementById('ptiempo_'    + id)?.value || '';
+    const f = document.getElementById('pfrecuencia_'+ id)?.value || '';
+    if (n) procesosTexto.push(n + ' | ' + s + ' | ' + t + 'h | ' + f);
+  });
+
+  // Métricas ROI
+  const hMesEl    = document.getElementById('roi_horas');
+  const reducEl   = document.getElementById('roi_reduccion');
+  const libEl     = document.getElementById('roi_liberadas');
+
+  var datos = {
+    nombre:       nombre,
+    cargo:        cargo,
+    area:         area,
+    confirma:     radiosSeleccionados['rg_confirma']   || '—',
+    procesos:     procesosTexto.join(' / '),
+    repetitivo:   radiosSeleccionados['rg_repetitivo'] || '—',
+    cliente:      radiosSeleccionados['rg_cliente']    || '—',
+    tiempo:       radiosSeleccionados['rg_tiempo']     || '—',
+    reglas:       radiosSeleccionados['rg_reglas']     || '—',
+    tipoMejora:   [...document.querySelectorAll('#ck_mejora .opcion-check.marcado')].map(function(e){return e.textContent.trim();}).join(', '),
+    asis:         document.getElementById('ta_asis')?.value  || '—',
+    tobe:         document.getElementById('ta_tobe')?.value  || '—',
+    personas:     document.getElementById('inp_p')?.value    || '—',
+    tiempoMejora: document.getElementById('inp_t2')?.value   || '—',
+    horasMes:     hMesEl  ? hMesEl.textContent  : '—',
+    reduccion:    reducEl ? reducEl.textContent : '—',
+    horasLib:     libEl   ? libEl.textContent   : '—',
+    prioridad:    radiosSeleccionados['rg_prioridad']  || '—',
+    observaciones: document.getElementById('ta_obs')?.value || ''
+  };
+
+  // Mostrar pantalla de carga
+  var btnEnviar = document.querySelector('.btn.enviar');
+  if (btnEnviar) { btnEnviar.disabled = true; btnEnviar.textContent = 'Enviando...'; }
+
+  // Enviar a Google Sheets
+  var URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbxYbEueRWXzy-cbFBwNY83HBMtV9spS1CSU4nPRDDLB5U_lNO9_AWbkf3_3IecKc5KE/exec';
+
+  fetch(URL_SCRIPT, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datos)
+  })
+  .then(function() {
+    document.getElementById('formulario').style.display = 'none';
+    document.getElementById('pantallaExito').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  })
+  .catch(function(err) {
+    if (btnEnviar) { btnEnviar.disabled = false; btnEnviar.textContent = '✔ Enviar encuesta'; }
+    alert('Error al enviar. Verifica tu conexión e intenta de nuevo.');
+  });
 }
 </script>
 </body>
