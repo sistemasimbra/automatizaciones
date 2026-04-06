@@ -405,7 +405,7 @@
         </div>
       </div>
 
-      <div class="tarjeta">
+      <div class="tarjeta" id="tarjetaProcesos">
         <div class="tarjeta-desc" style="margin-bottom:1rem;">
           Agrega cada proceso que consideras candidato a automatización o mejora.
         </div>
@@ -646,13 +646,21 @@ function elegirRadio(grupo, el, valor) {
   document.querySelectorAll(`#${grupo} .opcion-radio`).forEach(b => b.classList.remove('seleccionado'));
   el.classList.add('seleccionado');
   radiosSeleccionados[grupo] = valor;
-  // Si en paso 2 dice "No por ahora", saltar directo al resumen final
-  if (grupo === 'rg_confirma' && valor === 'No por ahora') {
-    document.getElementById('btnSiguiente').textContent = 'Finalizar →';
-    document.getElementById('btnSiguiente').onclick = function() { irAlResumen(); };
-  } else if (grupo === 'rg_confirma') {
-    document.getElementById('btnSiguiente').textContent = 'Siguiente →';
-    document.getElementById('btnSiguiente').onclick = function() { navegar(1); };
+
+  if (grupo === 'rg_confirma') {
+    const noAhora = valor === 'No por ahora';
+    // Ocultar/mostrar la tarjeta de procesos
+    const tp = document.getElementById('tarjetaProcesos');
+    if (tp) tp.style.display = noAhora ? 'none' : 'block';
+    // Cambiar botón
+    const btn = document.getElementById('btnSiguiente');
+    if (noAhora) {
+      btn.textContent = 'Finalizar →';
+      btn.onclick = function() { irAlResumen(); };
+    } else {
+      btn.textContent = 'Siguiente →';
+      btn.onclick = function() { navegar(1); };
+    }
   }
 }
 
