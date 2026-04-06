@@ -630,11 +630,6 @@ function poblarSelect() {
   agregarProceso();
 }
 
- catch(err) {
-    mostrarError('Error al procesar el archivo: ' + err.message);
-  }
-}
-
 function mostrarError(msg) {
   const el = document.getElementById('msgError');
   el.textContent = msg;
