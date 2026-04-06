@@ -747,13 +747,11 @@ function calcularROI() {
   });
   const p  = parseFloat(document.getElementById('inp_p').value)  || 1;
   const t2 = parseFloat(document.getElementById('inp_t2').value) || 0;
-  const hMesTot = t1 * p;
-  const hLibTot = Math.max(0, (t1 - t2) * p);
 
   if (t1 > 0) {
     document.getElementById('resultado_roi').style.display = 'block';
-    const hMes = +hMesTot.toFixed(1);
-    const hLib = +hLibTot.toFixed(1);
+    const hMes = +t1.toFixed(1);
+    const hLib = +(Math.max(0, t1 - t2)).toFixed(1);
     const pct  = t1 > 0 ? Math.max(0, Math.round((1 - t2 / t1) * 100)) : 0;
     document.getElementById('roi_horas').textContent     = hMes + 'h';
     document.getElementById('roi_reduccion').textContent = pct + '%';
@@ -790,9 +788,7 @@ function construirResumen() {
     const pf = document.getElementById('pfrecuencia_' + id)?.value || '';
     hMesTot += pt * frecAVeces(pf);
   });
-  const hMes = hMesTot > 0
-    ? (hMesTot * (parseFloat(document.getElementById('inp_p').value) || 1)).toFixed(1) + 'h'
-    : '—';
+  const hMes = hMesTot > 0 ? hMesTot.toFixed(1) + 'h' : '—';
 
   const badgeClass = prioridad === 'Alta' ? 'badge-alta' : prioridad === 'Media' ? 'badge-media' : 'badge-baja';
 
