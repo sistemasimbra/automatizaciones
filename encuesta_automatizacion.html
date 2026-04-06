@@ -922,6 +922,16 @@ function enviarEncuesta() {
     personas:     document.getElementById('inp_p')?.value    || '—',
     tiempoMejora: document.getElementById('inp_t2')?.value   || '—',
     horasMes:     hMesEl  ? hMesEl.textContent  : '—',
+    horasToBeTotal: (function() {
+      var t2 = parseFloat(document.getElementById('inp_t2')?.value) || 0;
+      var totalFrec = 0;
+      document.querySelectorAll('.proceso-item').forEach(function(pr) {
+        var id = pr.id.replace('proc_', '');
+        var pf = document.getElementById('pfrecuencia_' + id)?.value || '';
+        totalFrec += frecAVeces(pf);
+      });
+      return (t2 * (totalFrec || 1)).toFixed(1);
+    })(),
     reduccion:    reducEl ? reducEl.textContent : '—',
     horasLib:     libEl   ? libEl.textContent   : '—',
     prioridad:    radiosSeleccionados['rg_prioridad']  || '—',
@@ -933,7 +943,7 @@ function enviarEncuesta() {
   if (btnEnviar) { btnEnviar.disabled = true; btnEnviar.textContent = 'Enviando...'; }
 
   // Enviar a Google Sheets via URL con parámetros GET (más confiable con Apps Script)
-  var URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbyL7OVQsB8nvcujML59nWDBkIA0iOxQ0zr83Avn3V4wA9kL9WnPa7jA4xW933mxRNe0/exec';
+  var URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbx4Z6IHevcIb207xtjaWdXmWv_ddfL_b7OaSRE8jIRT9HhWFaWp1r5lo4b-1gLD53AJ/exec';
 
   var params = Object.keys(datos).map(function(k) {
     return encodeURIComponent(k) + '=' + encodeURIComponent(datos[k]);
