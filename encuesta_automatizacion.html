@@ -460,14 +460,14 @@
         <div class="campo">
           <label>¿Qué tipo de mejora esperas? (puedes elegir varias)</label>
           <div class="grupo-check" id="ck_mejora">
-            <label class="opcion-check" onclick="marcarCheck(this)"><input type="checkbox"><span class="check-dot"></span>Automatización total</label>
-            <label class="opcion-check" onclick="marcarCheck(this)"><input type="checkbox"><span class="check-dot"></span>Automatización parcial</label>
-            <label class="opcion-check" onclick="marcarCheck(this)"><input type="checkbox"><span class="check-dot"></span>Asistencia con IA</label>
-            <label class="opcion-check" onclick="marcarCheck(this)"><input type="checkbox"><span class="check-dot"></span>Reducción de errores</label>
-            <label class="opcion-check" onclick="marcarCheck(this)"><input type="checkbox"><span class="check-dot"></span>Reducción de tiempo</label>
-            <label class="opcion-check" onclick="marcarCheck(this)"><input type="checkbox"><span class="check-dot"></span>Mejor experiencia al cliente</label>
-            <label class="opcion-check" onclick="marcarCheck(this)"><input type="checkbox"><span class="check-dot"></span>Integración de sistemas</label>
-            <label class="opcion-check" onclick="marcarCheck(this)"><input type="checkbox"><span class="check-dot"></span>Análisis de datos</label>
+            <span class="opcion-check" onclick="marcarCheck(this)"><span class="check-dot"></span>Automatización total</span>
+            <span class="opcion-check" onclick="marcarCheck(this)"><span class="check-dot"></span>Automatización parcial</span>
+            <span class="opcion-check" onclick="marcarCheck(this)"><span class="check-dot"></span>Asistencia con IA</span>
+            <span class="opcion-check" onclick="marcarCheck(this)"><span class="check-dot"></span>Reducción de errores</span>
+            <span class="opcion-check" onclick="marcarCheck(this)"><span class="check-dot"></span>Reducción de tiempo</span>
+            <span class="opcion-check" onclick="marcarCheck(this)"><span class="check-dot"></span>Mejor experiencia al cliente</span>
+            <span class="opcion-check" onclick="marcarCheck(this)"><span class="check-dot"></span>Integración de sistemas</span>
+            <span class="opcion-check" onclick="marcarCheck(this)"><span class="check-dot"></span>Análisis de datos</span>
           </div>
         </div>
 
@@ -771,7 +771,7 @@ function construirResumen() {
 
   const procs  = document.querySelectorAll('.proceso-item');
   const mejoras = [...document.querySelectorAll('#ck_mejora .opcion-check.marcado')]
-    .map(e => e.textContent.trim()).join(', ') || '—';
+    .map(e => e.textContent.replace(/^\s*/, '').trim()).join(', ') || '—';
 
   const t1 = document.getElementById('inp_t1').value;
   const v  = document.getElementById('inp_v').value;
