@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Encuesta de Procesos - Automatización e IA</title>
+
+<!-- SheetJS para leer el Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+  :root {
+    --azul: #185FA5;
+    --azul-claro: #E6F1FB;
+    --azul-medio: #85B7EB;
+    --azul-oscuro: #0C447C;
+    --borde: #d0d0d0;
+    --fondo: #f5f6f8;
+    --blanco: #ffffff;
+    --texto: #1a1a1a;
+    --texto-suave: #666;
+    --radio: 8px;
+    --radio-lg: 12px;
+    --sombra: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--fondo);
+    color: var(--texto);
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .contenedor {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  /* PANTALLA DE CARGA */
+  #pantallaCarga {
+    text-align: center;
+    padding: 5rem 2rem;
+    background: var(--blanco);
+    border-radius: var(--radio-lg);
+    box-shadow: var(--sombra);
+  }
+  #pantallaCarga h2 { font-size: 20px; font-weight: 600; margin-bottom: 10px; color: var(--texto); }
+  #pantallaCarga p { font-size: 14px; color: var(--texto-suave); margin-bottom: 1.5rem; }
+  .cargando-icono {
+    font-size: 48px;
+    margin-bottom: 1rem;
+    animation: spin 1.5s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+  .error-msg {
+    background: #fdecea;
+    border: 1px solid #f5c6cb;
+    border-radius: var(--radio);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #721c24;
+    margin-top: 1rem;
+    display: none;
+  }
+
+  /* ENCABEZADO DEL FORMULARIO */
+  .header {
+    background: var(--blanco);
+    border-radius: var(--radio-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--sombra);
+    text-align: center;
+  }
+  .header h1 { font-size: 22px; font-weight: 700; color: var(--azul); margin-bottom: 4px; }
+  .header p { font-size: 13px; color: var(--texto-suave); }
+
+  /* BARRA DE PROGRESO */
+  .progreso-wrap { margin-bottom: 1.25rem; }
+  .progreso-pills { display: flex; gap: 6px; margin-bottom: 6px; }
+  .pill { flex: 1; height: 5px; border-radius: 3px; background: #dde; transition: background 0.3s; }
+  .pill.hecho { background: var(--azul); }
+  .pill.activo { background: var(--azul-medio); }
+  .progreso-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--texto-suave); }
+
+  /* SECCIONES */
+  .seccion { display: none; }
+  .seccion.activa { display: block; }
+
+  /* TARJETA */
+  .tarjeta {
+    background: var(--blanco);
+    border-radius: var(--radio-lg);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--sombra);
+  }
+  .tarjeta-titulo { font-size: 17px; font-weight: 700; color: var(--texto); margin-bottom: 4px; }
+  .tarjeta-desc { font-size: 13px; color: var(--texto-suave); margin-bottom: 1.25rem; }
+
+  /* CAMPOS */
+  .campo { margin-bottom: 1.25rem; }
+  .campo:last-child { margin-bottom: 0; }
+  .campo label { display: block; font-size: 13px; font-weight: 600; color: var(--texto-suave); margin-bottom: 6px; }
+  .campo select,
+  .campo input[type=text],
+  .campo textarea {
+    width: 100%;
+    font-size: 14px;
+    padding: 9px 12px;
+    border: 1.5px solid var(--borde);
+    border-radius: var(--radio);
+    background: var(--blanco);
+    color: var(--texto);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .campo select:focus,
+  .campo input:focus,
+  .campo textarea:focus { border-color: var(--azul); box-shadow: 0 0 0 3px rgba(24,95,165,0.1); }
+  .campo textarea { resize: vertical; min-height: 90px; }
+  .campo input[readonly] {
+    background: #f0f2f5;
+    color: var(--texto-suave);
+    cursor: default;
+  }
+
+  .dos-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* RADIO BUTTONS PERSONALIZADOS */
+  .grupo-radio { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opcion-radio {
+    display: flex; align-items: center; gap: 7px;
+    padding: 8px 16px;
+    border: 1.5px solid var(--borde);
+    border-radius: var(--radio);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--texto);
+    background: var(--blanco);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .opcion-radio:hover { border-color: var(--azul); background: var(--azul-claro); color: var(--azul); }
+  .opcion-radio.seleccionado { border-color: var(--azul); background: var(--azul-claro); color: var(--azul); font-weight: 600; }
+  .opcion-radio input { display: none; }
+  .circulo {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .circulo::after {
+    content: '';
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    display: none;
+  }
+  .opcion-radio.seleccionado .circulo::after { display: block; }
+
+  /* CHECKBOXES PERSONALIZADOS */
+  .grupo-check { display: flex; flex-wrap: wrap; gap: 7px; }
+  .opcion-check {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px;
+    border: 1.5px solid var(--borde);
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+    color: var(--texto);
+    background: var(--blanco);
+  }
+  .opcion-check:hover { border-color: var(--azul); background: var(--azul-claro); color: var(--azul); }
+  .opcion-check.marcado { background: var(--azul-claro); border-color: var(--azul); color: var(--azul-oscuro); font-weight: 600; }
+  .opcion-check input { display: none; }
+  .check-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    transition: background 0.15s;
+  }
+  .opcion-check.marcado .check-dot { background: var(--azul); border-color: var(--azul); }
+
+  /* LISTA DE PROCESOS */
+  .proceso-item {
+    border: 1.5px solid var(--borde);
+    border-radius: var(--radio);
+    padding: 1rem;
+    background: #fafafa;
+    margin-bottom: 10px;
+  }
+  .proceso-cabeza { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .proceso-titulo { font-size: 13px; font-weight: 700; color: var(--texto-suave); }
+  .btn-eliminar {
+    font-size: 12px; color: #c0392b; cursor: pointer;
+    border: none; background: none; padding: 3px 10px;
+    border-radius: var(--radio); transition: background 0.15s;
+  }
+  .btn-eliminar:hover { background: #fdecea; }
+  .btn-agregar {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    font-size: 13px; color: var(--azul);
+    border: 2px dashed var(--azul-medio);
+    border-radius: var(--radio);
+    padding: 9px 16px;
+    cursor: pointer; background: transparent; width: 100%;
+    margin-top: 8px; transition: background 0.15s;
+    font-weight: 600;
+  }
+  .btn-agregar:hover { background: var(--azul-claro); }
+
+  /* ROI */
+  .metricas-roi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 1rem; }
+  .metrica {
+    background: var(--fondo);
+    border-radius: var(--radio);
+    padding: 1rem;
+    text-align: center;
+    border: 1px solid var(--borde);
+  }
+  .metrica-num { font-size: 22px; font-weight: 700; color: var(--azul); }
+  .metrica-lbl { font-size: 11px; color: var(--texto-suave); margin-top: 3px; }
+
+  /* RESUMEN */
+  .resumen-item {
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    padding: 1rem;
+    margin-bottom: 8px;
+    background: var(--blanco);
+  }
+  .resumen-etiq { font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--texto-suave); margin-bottom: 3px; font-weight: 600; }
+  .resumen-valor { font-size: 14px; color: var(--texto); }
+
+  /* CAJA INFO */
+  .caja-info {
+    background: var(--azul-claro);
+    border: 1px solid var(--azul-medio);
+    border-radius: var(--radio-lg);
+    padding: 1rem 1.25rem;
+    font-size: 13px;
+    color: var(--azul-oscuro);
+    margin-top: 1rem;
+  }
+
+  /* BADGE PRIORIDAD */
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+  .badge-alta { background: #fff3cd; color: #856404; }
+  .badge-media { background: var(--azul-claro); color: var(--azul-oscuro); }
+  .badge-baja { background: #d4edda; color: #155724; }
+
+  /* NAVEGACIÓN */
+  .navegacion {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 1.5rem; gap: 12px;
+  }
+  .btn {
+    padding: 10px 26px;
+    border-radius: var(--radio);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--borde);
+    background: var(--blanco);
+    color: var(--texto);
+    transition: all 0.15s;
+  }
+  .btn:hover { background: var(--fondo); }
+  .btn.primario {
+    background: var(--azul);
+    color: white;
+    border-color: var(--azul);
+  }
+  .btn.primario:hover { background: var(--azul-oscuro); border-color: var(--azul-oscuro); }
+  .btn.enviar {
+    background: #27ae60;
+    color: white;
+    border-color: #27ae60;
+    padding: 12px 36px;
+    font-size: 15px;
+  }
+  .btn.enviar:hover { background: #1e8449; }
+
+  .paso-texto { font-size: 12px; color: var(--texto-suave); }
+
+  /* ÉXITO */
+  #pantallaExito {
+    display: none;
+    text-align: center;
+    padding: 3rem 2rem;
+    background: var(--blanco);
+    border-radius: var(--radio-lg);
+    box-shadow: var(--sombra);
+  }
+  #pantallaExito .check-icon {
+    width: 64px; height: 64px;
+    background: #d4edda;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 28px;
+  }
+  #pantallaExito h2 { font-size: 20px; font-weight: 700; color: #155724; margin-bottom: 8px; }
+  #pantallaExito p { font-size: 14px; color: var(--texto-suave); }
+
+  @media(max-width: 520px) {
+    .dos-col { grid-template-columns: 1fr; }
+    .metricas-roi { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="contenedor">
+
+  <!-- PANTALLA DE CARGA AUTOMÁTICA -->
+  <div id="pantallaCarga">
+    <div class="cargando-icono">⏳</div>
+    <h2>Cargando encuesta...</h2>
+    <p>Por favor espera un momento.</p>
+    <div class="error-msg" id="msgError"></div>
+  </div>
+
+  <!-- FORMULARIO PRINCIPAL (oculto hasta cargar Excel) -->
+  <div id="formulario" style="display:none;">
+
+    <div class="header">
+      <h1>Encuesta de Procesos</h1>
+      <p>Identificación de oportunidades de automatización e IA</p>
+    </div>
+
+    <div class="progreso-wrap">
+      <div class="progreso-pills">
+        <div class="pill activo" id="pill0"></div>
+        <div class="pill" id="pill1"></div>
+        <div class="pill" id="pill2"></div>
+        <div class="pill" id="pill3"></div>
+        <div class="pill" id="pill4"></div>
+      </div>
+      <div class="progreso-labels">
+        <span>Quién soy</span>
+        <span>Procesos</span>
+        <span>Diagnóstico</span>
+        <span>Tiempos</span>
+        <span>Envío</span>
+      </div>
+    </div>
+
+    <!-- PASO 1: Identificación -->
+    <div class="seccion activa" id="paso0">
+      <div class="tarjeta">
+        <div class="tarjeta-titulo">¿Quién diligencia esta encuesta?</div>
+        <div class="tarjeta-desc">Selecciona tu nombre de la lista. El cargo se completará automáticamente.</div>
+
+        <div class="campo">
+          <label>Nombre del empleado</label>
+          <select id="selNombre" onchange="autocompletarCargo()">
+            <option value="">— Selecciona tu nombre —</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label>Cargo</label>
+          <input type="text" id="campoCargo" readonly placeholder="Se completa automáticamente">
+        </div>
+        <div class="campo">
+          <label>Área / Dependencia</label>
+          <input type="text" id="campoArea" readonly placeholder="Se completa automáticamente">
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 2: Procesos -->
+    <div class="seccion" id="paso1">
+      <div class="tarjeta">
+        <div class="tarjeta-titulo">Procesos que deseas mejorar</div>
+        <div class="tarjeta-desc">¿Confirmas que tienes procesos que deseas automatizar o mejorar?</div>
+
+        <div class="campo">
+          <label>¿Tienes procesos que deseas automatizar o mejorar?</label>
+          <div class="grupo-radio" id="rg_confirma">
+            <label class="opcion-radio" onclick="elegirRadio('rg_confirma', this, 'Sí, tengo identificados')">
+              <input type="radio"><div class="circulo"></div><span>Sí, tengo identificados</span>
+            </label>
+            <label class="opcion-radio" onclick="elegirRadio('rg_confirma', this, 'Posiblemente')">
+              <input type="radio"><div class="circulo"></div><span>Posiblemente</span>
+            </label>
+            <label class="opcion-radio" onclick="elegirRadio('rg_confirma', this, 'No por ahora')">
+              <input type="radio"><div class="circulo"></div><span>No por ahora</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="tarjeta">
+        <div class="tarjeta-desc" style="margin-bottom:1rem;">
+          Agrega cada proceso que consideras candidato a automatización o mejora.
+        </div>
+        <div id="listaProcesos"></div>
+        <button class="btn-agregar" onclick="agregarProceso()">+ Agregar proceso</button>
+      </div>
+    </div>
+
+    <!-- PASO 3: Diagnóstico -->
+    <div class="seccion" id="paso2">
+      <div class="tarjeta">
+        <div class="tarjeta-titulo">Diagnóstico del proceso actual (AS IS)</div>
+        <div class="tarjeta-desc">Responde sobre el estado actual de los procesos que identificaste.</div>
+
+        <div class="campo">
+          <label>¿Es un proceso repetitivo?</label>
+          <div class="grupo-radio" id="rg_repetitivo">
+            <label class="opcion-radio" onclick="elegirRadio('rg_repetitivo',this,'Sí, siempre')"><input type="radio"><div class="circulo"></div><span>Sí, siempre</span></label>
+            <label class="opcion-radio" onclick="elegirRadio('rg_repetitivo',this,'La mayoría de veces')"><input type="radio"><div class="circulo"></div><span>La mayoría de veces</span></label>
+            <label class="opcion-radio" onclick="elegirRadio('rg_repetitivo',this,'Ocasionalmente')"><input type="radio"><div class="circulo"></div><span>Ocasionalmente</span></label>
+            <label class="opcion-radio" onclick="elegirRadio('rg_repetitivo',this,'No')"><input type="radio"><div class="circulo"></div><span>No</span></label>
+          </div>
+        </div>
+
+        <div class="campo">
+          <label>¿Genera molestia o impacto negativo al cliente?</label>
+          <div class="grupo-radio" id="rg_cliente">
+            <label class="opcion-radio" onclick="elegirRadio('rg_cliente',this,'Sí, directamente')"><input type="radio"><div class="circulo"></div><span>Sí, directamente</span></label>
+            <label class="opcion-radio" onclick="elegirRadio('rg_cliente',this,'Indirectamente')"><input type="radio"><div class="circulo"></div><span>Indirectamente</span></label>
+            <label class="opcion-radio" onclick="elegirRadio('rg_cliente',this,'No aplica')"><input type="radio"><div class="circulo"></div><span>No aplica</span></label>
+          </div>
+        </div>
+
+        <div class="campo">
+          <label>¿Son actividades que demandan mucho tiempo?</label>
+          <div class="grupo-radio" id="rg_tiempo">
+            <label class="opcion-radio" onclick="elegirRadio('rg_tiempo',this,'Sí, más del 30% de mi jornada')"><input type="radio"><div class="circulo"></div><span>Sí, más del 30% de mi jornada</span></label>
+            <label class="opcion-radio" onclick="elegirRadio('rg_tiempo',this,'Moderado (10–30%)')"><input type="radio"><div class="circulo"></div><span>Moderado (10–30%)</span></label>
+            <label class="opcion-radio" onclick="elegirRadio('rg_tiempo',this,'Poco tiempo (&lt;10%)')"><input type="radio"><div class="circulo"></div><span>Poco tiempo (&lt;10%)</span></label>
+          </div>
+        </div>
+
+        <div class="campo">
+          <label>¿El proceso tiene reglas claras y definidas?</label>
+          <div class="grupo-radio" id="rg_reglas">
+            <label class="opcion-radio" onclick="elegirRadio('rg_reglas',this,'Sí, están documentadas')"><input type="radio"><div class="circulo"></div><span>Sí, documentadas</span></label>
+            <label class="opcion-radio" onclick="elegirRadio('rg_reglas',this,'Parcialmente')"><input type="radio"><div class="circulo"></div><span>Parcialmente</span></label>
+            <label class="opcion-radio" onclick="elegirRadio('rg_reglas',this,'No, es subjetivo')"><input type="radio"><div class="circulo"></div><span>No, es subjetivo</span></label>
+          </div>
+        </div>
+
+        <div class="campo">
+          <label>¿Qué tipo de mejora esperas? (puedes elegir varias)</label>
+          <div class="grupo-check" id="ck_mejora">
+            <label class="opcion-check" onclick="marcarCheck(this)"><input type="checkbox"><span class="check-dot"></span>Automatización total</label>
+            <label class="opcion-check" onclick="marcarCheck(this)"><input type="checkbox"><span class="check-dot"></span>Automatización parcial</label>
+            <label class="opcion-check" onclick="marcarCheck(this)"><input type="checkbox"><span class="check-dot"></span>Asistencia con IA</label>
+            <label class="opcion-check" onclick="marcarCheck(this)"><input type="checkbox"><span class="check-dot"></span>Reducción de errores</label>
+            <label class="opcion-check" onclick="marcarCheck(this)"><input type="checkbox"><span class="check-dot"></span>Reducción de tiempo</label>
+            <label class="opcion-check" onclick="marcarCheck(this)"><input type="checkbox"><span class="check-dot"></span>Mejor experiencia al cliente</label>
+            <label class="opcion-check" onclick="marcarCheck(this)"><input type="checkbox"><span class="check-dot"></span>Integración de sistemas</label>
+            <label class="opcion-check" onclick="marcarCheck(this)"><input type="checkbox"><span class="check-dot"></span>Análisis de datos</label>
+          </div>
+        </div>
+
+        <div class="campo">
+          <label>Describe el proceso actual (AS IS)</label>
+          <textarea id="ta_asis" placeholder="Pasos actuales, herramientas que usas, personas involucradas, dificultades..."></textarea>
+        </div>
+        <div class="campo">
+          <label>¿Cómo imaginas el proceso mejorado? (TO BE)</label>
+          <textarea id="ta_tobe" placeholder="¿Cómo debería funcionar con la automatización o mejora?"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 4: Tiempos y ROI -->
+    <div class="seccion" id="paso3">
+      <div class="tarjeta">
+        <div class="tarjeta-titulo">Estimación de tiempos</div>
+        <div class="tarjeta-desc">
+          Esta información permite calcular el impacto real del proceso.<br>
+          <strong style="color:#856404;">No verás valores de nómina</strong> — el costo se calcula internamente.
+        </div>
+
+        <div class="dos-col">
+          <div class="campo">
+            <label>Tiempo por ejecución (minutos)</label>
+            <input type="text" id="inp_t1" placeholder="Ej: 30" oninput="calcularROI()">
+          </div>
+          <div class="campo">
+            <label>Veces que ocurre al mes</label>
+            <input type="text" id="inp_v" placeholder="Ej: 20" oninput="calcularROI()">
+          </div>
+        </div>
+        <div class="dos-col">
+          <div class="campo">
+            <label>Personas que participan en el proceso</label>
+            <input type="text" id="inp_p" placeholder="Ej: 3" oninput="calcularROI()">
+          </div>
+          <div class="campo">
+            <label>Tiempo estimado con mejora (minutos)</label>
+            <input type="text" id="inp_t2" placeholder="Ej: 5" oninput="calcularROI()">
+          </div>
+        </div>
+
+        <div id="resultado_roi" style="display:none;">
+          <div style="font-size:13px;font-weight:600;color:var(--texto-suave);margin-bottom:.75rem;margin-top:.5rem;border-top:1px solid var(--borde);padding-top:1rem;">
+            Estimación calculada automáticamente
+          </div>
+          <div class="metricas-roi">
+            <div class="metrica">
+              <div class="metrica-num" id="roi_horas">0h</div>
+              <div class="metrica-lbl">Horas actuales / mes</div>
+            </div>
+            <div class="metrica">
+              <div class="metrica-num" id="roi_reduccion">0%</div>
+              <div class="metrica-lbl">Reducción de tiempo</div>
+            </div>
+            <div class="metrica">
+              <div class="metrica-num" id="roi_liberadas">0h</div>
+              <div class="metrica-lbl">Horas liberadas / mes</div>
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--texto-suave);margin-top:10px;">
+            ℹ️ El costo económico se calculará con los datos de nómina del empleado seleccionado.
+          </p>
+        </div>
+      </div>
+
+      <div class="tarjeta">
+        <div class="campo">
+          <label>Prioridad que le asignas a este proceso</label>
+          <div class="grupo-radio" id="rg_prioridad">
+            <label class="opcion-radio" onclick="elegirRadio('rg_prioridad',this,'Alta')"><input type="radio"><div class="circulo"></div><span>Alta</span></label>
+            <label class="opcion-radio" onclick="elegirRadio('rg_prioridad',this,'Media')"><input type="radio"><div class="circulo"></div><span>Media</span></label>
+            <label class="opcion-radio" onclick="elegirRadio('rg_prioridad',this,'Baja')"><input type="radio"><div class="circulo"></div><span>Baja</span></label>
+          </div>
+        </div>
+        <div class="campo">
+          <label>Observaciones, riesgos o condiciones especiales</label>
+          <textarea id="ta_obs" placeholder="¿Hay algo que Gerencia o Calidad deba saber antes de decidir?"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 5: Resumen y envío -->
+    <div class="seccion" id="paso4">
+      <div class="tarjeta">
+        <div class="tarjeta-titulo">Revisa y envía</div>
+        <div class="tarjeta-desc">Verifica que la información esté completa antes de enviar.</div>
+        <div id="contenidoResumen"></div>
+      </div>
+      <div class="caja-info">
+        Gerencia y Calidad revisarán los procesos identificados para definir cuáles se priorizan para inversión y mejora.
+        Los resultados alimentarán el indicador de cobertura de acompañamiento en automatización e IA.
+      </div>
+      <div style="text-align:center;margin-top:1.5rem;">
+        <button class="btn enviar" onclick="enviarEncuesta()">✔ Enviar encuesta</button>
+      </div>
+    </div>
+
+    <!-- NAVEGACIÓN -->
+    <div class="navegacion">
+      <button class="btn" id="btnAnterior" onclick="navegar(-1)" style="visibility:hidden;">← Anterior</button>
+      <span class="paso-texto" id="textoStep">Paso 1 de 5</span>
+      <button class="btn primario" id="btnSiguiente" onclick="navegar(1)">Siguiente →</button>
+    </div>
+
+  </div><!-- fin formulario -->
+
+  <!-- PANTALLA DE ÉXITO -->
+  <div id="pantallaExito">
+    <div class="check-icon">✔</div>
+    <h2>¡Encuesta enviada!</h2>
+    <p>Tu respuesta ha sido registrada correctamente.<br>Gerencia y Calidad la revisarán próximamente.</p>
+  </div>
+
+</div><!-- fin contenedor -->
+
+<script>
+// ─────────────────────────────────────────────────
+//  VARIABLES GLOBALES
+// ─────────────────────────────────────────────────
+let empleados = [];
+
+// Cargar automáticamente al abrir la página
+window.addEventListener('DOMContentLoaded', function() {
+  cargarDesdeSharePoint();
+});
+let pasoActual = 0;
+const TOTAL_PASOS = 5;
+let radiosSeleccionados = {};
+let contadorProcesos = 0;
+
+// ─────────────────────────────────────────────────
+//  CARGA DEL EXCEL
+// ─────────────────────────────────────────────────
+const EXCEL_URL = 'https://imbrarepuestosit-my.sharepoint.com/:x:/g/personal/sistemas_imbrarepuestos_com/IQBPOVijHcwEQL8fjllgFLqbAYd-KujN7mrGT7LhX4kt3us?download=1';
+
+async function cargarDesdeSharePoint() {
+  try {
+    const resp = await fetch(EXCEL_URL);
+    if (!resp.ok) throw new Error('No se pudo descargar el archivo. Código: ' + resp.status);
+    const buffer = await resp.arrayBuffer();
+    procesarExcel(buffer);
+  } catch (err) {
+    mostrarError('No se pudo cargar el archivo de empleados. Verifica tu conexión o contacta a sistemas. Detalle: ' + err.message);
+  }
+}
+
+function procesarExcel(buffer) {
+  try {
+      // 1. Leer workbook
+      const data = new Uint8Array(buffer);
+      const wb = XLSX.read(data, { type: 'array' });
+
+      // 2. Elegir hoja — buscar ACTIVOS sin .includes()
+      let nombreHoja = wb.SheetNames[0];
+      for (let s = 0; s < wb.SheetNames.length; s++) {
+        if (String(wb.SheetNames[s]).toUpperCase().trim() === 'ACTIVOS') {
+          nombreHoja = wb.SheetNames[s]; break;
+        }
+      }
+      const hoja = wb.Sheets[nombreHoja];
+      if (!hoja) { mostrarError('No se pudo abrir la hoja del archivo.'); return; }
+
+      // 3. Convertir a array con defval:'' para evitar undefined
+      const filas = XLSX.utils.sheet_to_json(hoja, { header: 1, defval: '' });
+      if (!filas || filas.length === 0) { mostrarError('El archivo parece estar vacío.'); return; }
+
+      // 4. Detectar fila de encabezados (buscando NOMBRE y CARGO)
+      let filaEnc = -1, colNombre = -1, colCargo = -1, colSalario = -1, colAuxilio = -1, colCeco = -1;
+      for (let i = 0; i < Math.min(10, filas.length); i++) {
+        const fila = filas[i];
+        if (!Array.isArray(fila) || fila.length === 0) continue;
+        const celdas = fila.map(function(c) { return String(c == null ? '' : c).toUpperCase().trim(); });
+        let iN = -1, iC = -1;
+        for (let j = 0; j < celdas.length; j++) {
+          if (iN < 0 && celdas[j].indexOf('NOMBRE') >= 0) iN = j;
+          if (iC < 0 && celdas[j].indexOf('CARGO')  >= 0) iC = j;
+        }
+        if (iN >= 0 && iC >= 0) {
+          filaEnc = i; colNombre = iN; colCargo = iC;
+          for (let j = 0; j < celdas.length; j++) {
+            if (colSalario < 0 && celdas[j].indexOf('SALARIO')  >= 0) colSalario = j;
+            if (colAuxilio < 0 && (celdas[j].indexOf('AUXILIO') >= 0 || celdas[j].indexOf('ALIMENT') >= 0)) colAuxilio = j;
+            if (colCeco   < 0 && celdas[j].indexOf('CECO')     >= 0) colCeco = j;
+          }
+          break;
+        }
+      }
+      if (filaEnc < 0) {
+        mostrarError('No se encontraron las columnas NOMBRE y CARGO. Verifica que el archivo sea correcto.');
+        return;
+      }
+
+      // 5. Extraer empleados de forma defensiva
+      empleados = [];
+      for (let i = filaEnc + 1; i < filas.length; i++) {
+        const fila = filas[i];
+        if (!Array.isArray(fila)) continue;
+        const nombre = String(fila[colNombre] == null ? '' : fila[colNombre]).trim();
+        if (!nombre) continue;
+        const cargo   = String(fila[colCargo]   == null ? '' : fila[colCargo]).trim();
+        const salario = colSalario >= 0 ? (parseFloat(fila[colSalario]) || 0) : 0;
+        const auxilio = colAuxilio >= 0 ? (parseFloat(fila[colAuxilio]) || 0) : 0;
+        const ceco    = colCeco    >= 0 ? String(fila[colCeco] == null ? '' : fila[colCeco]).trim() : '';
+        empleados.push({ nombre: toTitleCase(nombre), cargo: toTitleCase(cargo), salario: salario, auxilio: auxilio, ceco: ceco });
+      }
+      if (empleados.length === 0) {
+        mostrarError('No se encontraron datos de empleados. Verifica que haya filas debajo de los encabezados.');
+        return;
+      }
+
+      // 6. Poblar select
+      empleados.sort(function(a, b) { return a.nombre.localeCompare(b.nombre); });
+      const sel = document.getElementById('selNombre');
+      sel.innerHTML = '<option value="">— Selecciona tu nombre —</option>';
+      for (let i = 0; i < empleados.length; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = empleados[i].nombre;
+        sel.appendChild(opt);
+      }
+
+      // 7. Mostrar formulario
+      document.getElementById('pantallaCarga').style.display = 'none';
+      document.getElementById('formulario').style.display = 'block';
+      agregarProceso();
+
+    } catch (err) {
+      mostrarError('Error al procesar el archivo: ' + err.message);
+    }
+  } catch(err) {
+    mostrarError('Error al procesar el archivo: ' + err.message);
+  }
+}
+
+function mostrarError(msg) {
+  const el = document.getElementById('msgError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function toTitleCase(str) {
+  return str.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+}
+
+// ─────────────────────────────────────────────────
+//  FORMULARIO
+// ─────────────────────────────────────────────────
+function autocompletarCargo() {
+  const v = document.getElementById('selNombre').value;
+  document.getElementById('campoCargo').value = v !== '' ? empleados[v].cargo : '';
+  document.getElementById('campoArea').value  = v !== '' ? empleados[v].ceco  : '';
+}
+
+function elegirRadio(grupo, el, valor) {
+  document.querySelectorAll(`#${grupo} .opcion-radio`).forEach(b => b.classList.remove('seleccionado'));
+  el.classList.add('seleccionado');
+  radiosSeleccionados[grupo] = valor;
+}
+
+function marcarCheck(el) {
+  el.classList.toggle('marcado');
+}
+
+function agregarProceso() {
+  contadorProcesos++;
+  const idx = contadorProcesos;
+  const div = document.createElement('div');
+  div.className = 'proceso-item';
+  div.id = `proc_${idx}`;
+  div.innerHTML = `
+    <div class="proceso-cabeza">
+      <span class="proceso-titulo">Proceso ${idx}</span>
+      <button class="btn-eliminar" onclick="eliminarProceso(${idx})">✕ Eliminar</button>
+    </div>
+    <div class="dos-col">
+      <div class="campo">
+        <label>Nombre del proceso</label>
+        <input type="text" id="pnombre_${idx}" placeholder="Ej: Cargue manual de facturas">
+      </div>
+      <div class="campo">
+        <label>Sistema / herramienta actual</label>
+        <input type="text" id="psistema_${idx}" placeholder="Ej: Excel, SAP, correo">
+      </div>
+    </div>
+    <div class="dos-col">
+      <div class="campo">
+        <label>Tiempo por ejecución (min)</label>
+        <input type="text" id="ptiempo_${idx}" placeholder="Ej: 45">
+      </div>
+      <div class="campo">
+        <label>Frecuencia</label>
+        <select id="pfrecuencia_${idx}">
+          <option value="">Selecciona...</option>
+          <option>Varias veces al día</option>
+          <option>Diario</option>
+          <option>Semanal</option>
+          <option>Quincenal</option>
+          <option>Mensual</option>
+          <option>Bajo demanda</option>
+        </select>
+      </div>
+    </div>`;
+  document.getElementById('listaProcesos').appendChild(div);
+}
+
+function eliminarProceso(idx) {
+  const el = document.getElementById(`proc_${idx}`);
+  if (el) el.remove();
+}
+
+function calcularROI() {
+  const t1 = parseFloat(document.getElementById('inp_t1').value) || 0;
+  const v  = parseFloat(document.getElementById('inp_v').value)  || 0;
+  const p  = parseFloat(document.getElementById('inp_p').value)  || 1;
+  const t2 = parseFloat(document.getElementById('inp_t2').value) || 0;
+
+  if (t1 > 0 && v > 0) {
+    document.getElementById('resultado_roi').style.display = 'block';
+    const hMes = +(t1 * v * p / 60).toFixed(1);
+    const hLib = +(Math.max(0, (t1 - t2) * v * p / 60)).toFixed(1);
+    const pct  = t1 > 0 ? Math.max(0, Math.round((1 - t2 / t1) * 100)) : 0;
+    document.getElementById('roi_horas').textContent     = hMes + 'h';
+    document.getElementById('roi_reduccion').textContent = pct + '%';
+    document.getElementById('roi_liberadas').textContent = hLib + 'h';
+  } else {
+    document.getElementById('resultado_roi').style.display = 'none';
+  }
+}
+
+// ─────────────────────────────────────────────────
+//  RESUMEN
+// ─────────────────────────────────────────────────
+function construirResumen() {
+  const vi     = document.getElementById('selNombre').value;
+  const nombre = vi !== '' ? empleados[vi].nombre : '—';
+  const cargo  = document.getElementById('campoCargo').value || '—';
+  const area   = document.getElementById('campoArea').value  || '—';
+  const confirma  = radiosSeleccionados['rg_confirma']    || '—';
+  const prioridad = radiosSeleccionados['rg_prioridad']   || '—';
+  const asis   = document.getElementById('ta_asis').value  || '—';
+  const tobe   = document.getElementById('ta_tobe').value  || '—';
+  const obs    = document.getElementById('ta_obs').value   || '';
+
+  const procs  = document.querySelectorAll('.proceso-item');
+  const mejoras = [...document.querySelectorAll('#ck_mejora .opcion-check.marcado')]
+    .map(e => e.textContent.trim()).join(', ') || '—';
+
+  const t1 = document.getElementById('inp_t1').value;
+  const v  = document.getElementById('inp_v').value;
+  const hMes = t1 && v
+    ? ((parseFloat(t1) * parseFloat(v) * (parseFloat(document.getElementById('inp_p').value) || 1)) / 60).toFixed(1) + 'h'
+    : '—';
+
+  const badgeClass = prioridad === 'Alta' ? 'badge-alta' : prioridad === 'Media' ? 'badge-media' : 'badge-baja';
+
+  let procsHTML = '';
+  procs.forEach((pr, idx) => {
+    const id = pr.id.replace('proc_', '');
+    const n = document.getElementById(`pnombre_${id}`)?.value || '—';
+    const s = document.getElementById(`psistema_${id}`)?.value || '—';
+    const t = document.getElementById(`ptiempo_${id}`)?.value || '—';
+    const f = document.getElementById(`pfrecuencia_${id}`)?.value || '—';
+    procsHTML += `
+      <div class="resumen-item">
+        <div class="resumen-etiq">Proceso ${idx + 1}</div>
+        <div class="resumen-valor"><strong>${n}</strong></div>
+        <div style="font-size:12px;color:var(--texto-suave);margin-top:3px">${s} · ${t} min · ${f}</div>
+      </div>`;
+  });
+
+  document.getElementById('contenidoResumen').innerHTML = `
+    <div class="resumen-item" style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <div style="font-size:16px;font-weight:700;">${nombre}</div>
+        <div style="font-size:13px;color:var(--texto-suave);">${cargo} · ${area}</div>
+      </div>
+      <span class="badge ${badgeClass}">Prioridad ${prioridad}</span>
+    </div>
+
+    <div class="resumen-item">
+      <div class="resumen-etiq">Confirma procesos a automatizar</div>
+      <div class="resumen-valor">${confirma}</div>
+    </div>
+
+    <div class="resumen-item">
+      <div class="resumen-etiq">Horas actuales del proceso / mes</div>
+      <div class="resumen-valor">${hMes}</div>
+    </div>
+
+    <div style="margin-top:8px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px;">
+        Procesos identificados (${procs.length})
+      </div>
+      ${procsHTML || '<span style="font-size:13px;color:var(--texto-suave);">Ninguno registrado</span>'}
+    </div>
+
+    <div class="resumen-item" style="margin-top:8px;">
+      <div class="resumen-etiq">AS IS — Proceso actual</div>
+      <div class="resumen-valor" style="white-space:pre-wrap;">${asis}</div>
+    </div>
+
+    <div class="resumen-item">
+      <div class="resumen-etiq">TO BE — Proceso mejorado</div>
+      <div class="resumen-valor" style="white-space:pre-wrap;">${tobe}</div>
+    </div>
+
+    <div class="resumen-item">
+      <div class="resumen-etiq">Tipo de mejora esperada</div>
+      <div class="resumen-valor">${mejoras}</div>
+    </div>
+
+    ${obs ? `
+    <div class="resumen-item">
+      <div class="resumen-etiq">Observaciones</div>
+      <div class="resumen-valor" style="white-space:pre-wrap;">${obs}</div>
+    </div>` : ''}
+  `;
+}
+
+// ─────────────────────────────────────────────────
+//  NAVEGACIÓN
+// ─────────────────────────────────────────────────
+function navegar(direccion) {
+  const nuevo = pasoActual + direccion;
+  if (nuevo < 0 || nuevo >= TOTAL_PASOS) return;
+
+  document.getElementById(`paso${pasoActual}`).classList.remove('activa');
+  document.getElementById(`pill${pasoActual}`).classList.remove('activo');
+  document.getElementById(`pill${pasoActual}`).classList.add('hecho');
+
+  pasoActual = nuevo;
+
+  document.getElementById(`paso${pasoActual}`).classList.add('activa');
+  document.getElementById(`pill${pasoActual}`).classList.remove('hecho');
+  document.getElementById(`pill${pasoActual}`).classList.add('activo');
+
+  document.getElementById('btnAnterior').style.visibility = pasoActual === 0 ? 'hidden' : 'visible';
+  document.getElementById('btnSiguiente').style.display   = pasoActual === TOTAL_PASOS - 1 ? 'none' : 'inline-block';
+  document.getElementById('textoStep').textContent = `Paso ${pasoActual + 1} de ${TOTAL_PASOS}`;
+
+  if (pasoActual === TOTAL_PASOS - 1) construirResumen();
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function enviarEncuesta() {
+  document.getElementById('formulario').style.display = 'none';
+  document.getElementById('pantallaExito').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
