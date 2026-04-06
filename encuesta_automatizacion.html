@@ -933,7 +933,7 @@ function enviarEncuesta() {
   if (btnEnviar) { btnEnviar.disabled = true; btnEnviar.textContent = 'Enviando...'; }
 
   // Enviar a Google Sheets via URL con parámetros GET (más confiable con Apps Script)
-  var URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbzjwgb39zO0YTvAqFPMK3AneZS5Y6k7m2pkzmoJIeu2NJvyCr6d4Zxrl8d4E7Vp4hbI/exec';
+  var URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbzv6_L2jAoXVmHJYp6ltS2TrBOWN4BwKXyTGyDYHd0t0fceguATegwH7y1c3udKoM8y/exec';
 
   var params = Object.keys(datos).map(function(k) {
     return encodeURIComponent(k) + '=' + encodeURIComponent(datos[k]);
