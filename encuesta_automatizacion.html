@@ -932,24 +932,44 @@ function enviarEncuesta() {
   var btnEnviar = document.querySelector('.btn.enviar');
   if (btnEnviar) { btnEnviar.disabled = true; btnEnviar.textContent = 'Enviando...'; }
 
-  // Enviar a Google Sheets
-  var URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbxYbEueRWXzy-cbFBwNY83HBMtV9spS1CSU4nPRDDLB5U_lNO9_AWbkf3_3IecKc5KE/exec';
+  // Enviar a Google Sheets via formulario oculto (compatible con Apps Script)
+  var URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbxz1uZb8DaoivoMix1sjoBTmt5DAPgmd2Q3Vkwct18T2svE73EJI1DWS0vzHZCxgoFJ/exec';
 
-  fetch(URL_SCRIPT, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(datos)
-  })
-  .then(function() {
+  var form = document.createElement('form');
+  form.method = 'POST';
+  form.action = URL_SCRIPT;
+  form.target = 'iframe_oculto';
+  form.style.display = 'none';
+
+  // Agregar cada campo como input hidden
+  var campos = Object.keys(datos);
+  for (var i = 0; i < campos.length; i++) {
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = campos[i];
+    input.value = datos[campos[i]];
+    form.appendChild(input);
+  }
+
+  // Iframe oculto para no redirigir la página
+  var iframe = document.getElementById('iframe_oculto');
+  if (!iframe) {
+    iframe = document.createElement('iframe');
+    iframe.name = 'iframe_oculto';
+    iframe.id   = 'iframe_oculto';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+  }
+
+  iframe.onload = function() {
     document.getElementById('formulario').style.display = 'none';
     document.getElementById('pantallaExito').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  })
-  .catch(function(err) {
-    if (btnEnviar) { btnEnviar.disabled = false; btnEnviar.textContent = '✔ Enviar encuesta'; }
-    alert('Error al enviar. Verifica tu conexión e intenta de nuevo.');
-  });
+  };
+
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
 }
 </script>
 </body>
