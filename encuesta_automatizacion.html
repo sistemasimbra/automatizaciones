@@ -726,6 +726,16 @@ function eliminarProceso(idx) {
   if (el) el.remove();
 }
 
+function frecAVeces(pf) {
+  if (pf === 'Varias veces al día') return 66;
+  if (pf === 'Diario')    return 22;
+  if (pf === 'Semanal')   return 4;
+  if (pf === 'Quincenal') return 2;
+  if (pf === 'Mensual')   return 1;
+  if (pf === 'Bajo demanda') return 1;
+  return 1;
+}
+
 function calcularROI() {
   // Sumar horas totales de todos los procesos ingresados
   let t1 = 0, v = 0, contProc = 0;
@@ -733,16 +743,17 @@ function calcularROI() {
     const id = pr.id.replace('proc_', '');
     const pt = parseFloat(document.getElementById('ptiempo_' + id)?.value) || 0;
     const pf = document.getElementById('pfrecuencia_' + id)?.value || '';
-    const veces = pf === 'Varias veces al día' ? 22*3 : pf === 'Diario' ? 22 : pf === 'Semanal' ? 4 : pf === 'Quincenal' ? 2 : pf === 'Mensual' ? 1 : 1;
-    if (pt > 0) { t1 += pt * veces; contProc++; }
+    if (pt > 0) { t1 += pt * frecAVeces(pf); contProc++; }
   });
   const p  = parseFloat(document.getElementById('inp_p').value)  || 1;
   const t2 = parseFloat(document.getElementById('inp_t2').value) || 0;
+  const hMesTot = t1 * p;
+  const hLibTot = Math.max(0, (t1 - t2) * p);
 
   if (t1 > 0) {
     document.getElementById('resultado_roi').style.display = 'block';
-    const hMes = +(t1 * p).toFixed(1);
-    const hLib = +(Math.max(0, (t1 - t2) * p)).toFixed(1);
+    const hMes = +hMesTot.toFixed(1);
+    const hLib = +hLibTot.toFixed(1);
     const pct  = t1 > 0 ? Math.max(0, Math.round((1 - t2 / t1) * 100)) : 0;
     document.getElementById('roi_horas').textContent     = hMes + 'h';
     document.getElementById('roi_reduccion').textContent = pct + '%';
@@ -777,8 +788,7 @@ function construirResumen() {
     const id = pr.id.replace('proc_', '');
     const pt = parseFloat(document.getElementById('ptiempo_' + id)?.value) || 0;
     const pf = document.getElementById('pfrecuencia_' + id)?.value || '';
-    const veces = pf === 'Varias veces al día' ? 66 : pf === 'Diario' ? 22 : pf === 'Semanal' ? 4 : pf === 'Quincenal' ? 2 : 1;
-    hMesTot += pt * veces;
+    hMesTot += pt * frecAVeces(pf);
   });
   const hMes = hMesTot > 0
     ? (hMesTot * (parseFloat(document.getElementById('inp_p').value) || 1)).toFixed(1) + 'h'
