@@ -748,11 +748,20 @@ function calcularROI() {
   const p  = parseFloat(document.getElementById('inp_p').value)  || 1;
   const t2 = parseFloat(document.getElementById('inp_t2').value) || 0;
 
+  // t2 multiplicado por la misma frecuencia total para comparar igual
+  let frecTotal = 0;
+  document.querySelectorAll('.proceso-item').forEach(function(pr) {
+    const id = pr.id.replace('proc_', '');
+    const pf = document.getElementById('pfrecuencia_' + id)?.value || '';
+    frecTotal += frecAVeces(pf);
+  });
+  const t2Mes = t2 * (frecTotal || 1);
+
   if (t1 > 0) {
     document.getElementById('resultado_roi').style.display = 'block';
     const hMes = +t1.toFixed(1);
-    const hLib = +(Math.max(0, t1 - t2)).toFixed(1);
-    const pct  = t1 > 0 ? Math.max(0, Math.round((1 - t2 / t1) * 100)) : 0;
+    const hLib = +(Math.max(0, t1 - t2Mes)).toFixed(1);
+    const pct  = t1 > 0 ? Math.max(0, Math.round((1 - t2Mes / t1) * 100)) : 0;
     document.getElementById('roi_horas').textContent     = hMes + 'h';
     document.getElementById('roi_reduccion').textContent = pct + '%';
     document.getElementById('roi_liberadas').textContent = hLib + 'h';
