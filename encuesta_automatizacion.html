@@ -932,44 +932,23 @@ function enviarEncuesta() {
   var btnEnviar = document.querySelector('.btn.enviar');
   if (btnEnviar) { btnEnviar.disabled = true; btnEnviar.textContent = 'Enviando...'; }
 
-  // Enviar a Google Sheets via formulario oculto (compatible con Apps Script)
-  var URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbxz1uZb8DaoivoMix1sjoBTmt5DAPgmd2Q3Vkwct18T2svE73EJI1DWS0vzHZCxgoFJ/exec';
+  // Enviar a Google Sheets via URL con parámetros GET (más confiable con Apps Script)
+  var URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbzjwgb39zO0YTvAqFPMK3AneZS5Y6k7m2pkzmoJIeu2NJvyCr6d4Zxrl8d4E7Vp4hbI/exec';
 
-  var form = document.createElement('form');
-  form.method = 'POST';
-  form.action = URL_SCRIPT;
-  form.target = 'iframe_oculto';
-  form.style.display = 'none';
+  var params = Object.keys(datos).map(function(k) {
+    return encodeURIComponent(k) + '=' + encodeURIComponent(datos[k]);
+  }).join('&');
 
-  // Agregar cada campo como input hidden
-  var campos = Object.keys(datos);
-  for (var i = 0; i < campos.length; i++) {
-    var input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = campos[i];
-    input.value = datos[campos[i]];
-    form.appendChild(input);
-  }
+  var urlFinal = URL_SCRIPT + '?' + params;
 
-  // Iframe oculto para no redirigir la página
-  var iframe = document.getElementById('iframe_oculto');
-  if (!iframe) {
-    iframe = document.createElement('iframe');
-    iframe.name = 'iframe_oculto';
-    iframe.id   = 'iframe_oculto';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-  }
+  var img = new Image();
+  img.src = urlFinal;
 
-  iframe.onload = function() {
+  setTimeout(function() {
     document.getElementById('formulario').style.display = 'none';
     document.getElementById('pantallaExito').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  document.body.appendChild(form);
-  form.submit();
-  document.body.removeChild(form);
+  }, 2000);
 }
 </script>
 </body>
