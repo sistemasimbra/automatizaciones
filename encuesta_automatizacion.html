@@ -493,8 +493,8 @@
 
         <div class="dos-col">
           <div class="campo">
-            <label>Tiempo por ejecución (minutos)</label>
-            <input type="text" id="inp_t1" placeholder="Ej: 30" oninput="calcularROI()">
+            <label>Tiempo por ejecución (horas)</label>
+            <input type="text" id="inp_t1" placeholder="Ej: 2.5" oninput="calcularROI()">
           </div>
           <div class="campo">
             <label>Veces que ocurre al mes</label>
@@ -507,8 +507,8 @@
             <input type="text" id="inp_p" placeholder="Ej: 3" oninput="calcularROI()">
           </div>
           <div class="campo">
-            <label>Tiempo estimado con mejora (minutos)</label>
-            <input type="text" id="inp_t2" placeholder="Ej: 5" oninput="calcularROI()">
+            <label>Tiempo estimado con mejora (horas)</label>
+            <input type="text" id="inp_t2" placeholder="Ej: 0.5" oninput="calcularROI()">
           </div>
         </div>
 
@@ -592,9 +592,12 @@
 // ─────────────────────────────────────────────────
 let empleados = [];
 
-// Cargar automáticamente al abrir la página
+// Datos incrustados directamente — sin fetch, sin dependencias externas
+const DATOS_EMPLEADOS = [{"nombre": "Acevedo Millan Luis Eduardo", "cargo": "Programador Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Acevedo Pastrana Michael De Jesus", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Agresoth Camargo Luis Mariano", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Agudelo Perez Katerin Lesette", "cargo": "Facturacion", "ceco": "Financiera Admon"}, {"nombre": "Alfonso Cardenas Andres Ricardo", "cargo": "Operario Torno Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Alfonso Vega Yeimi Yulied", "cargo": "Lider Contabilidad", "ceco": "Cabs Produccion"}, {"nombre": "Almanza Alvarez Angie Katherine", "cargo": "Lider De  Datos", "ceco": "Cabs Admon"}, {"nombre": "Almanza Barrera Andres Felipe", "cargo": "Nivel I", "ceco": "Cabs Produccion"}, {"nombre": "Alonso Diaz Cristian David", "cargo": "Nivel I", "ceco": "Cabs Ventas"}, {"nombre": "Alvarado Lopez Eduar", "cargo": "Nivel Ii (Alistamiento Y Despacho)", "ceco": "Cabs Ventas"}, {"nombre": "Alvarez Castañeda Carlos Alberto", "cargo": "Auxiliar De Control", "ceco": "Seguridad Admon"}, {"nombre": "Alvarez Olarte Pedro", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Alzate Trejos Santiago", "cargo": "Operario Torno Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Amortegui Avila Jonathan", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Arango Pachon Luis Hernan", "cargo": "Soldador", "ceco": "Cabs Produccion"}, {"nombre": "Arciniegas Santacruz Luis Carlos", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Arevalo Arevalo Mario", "cargo": "Nivel Ii A (Cargo Critico)", "ceco": "Cabs Ventas"}, {"nombre": "Arevalo Castillo Hawy Juseph", "cargo": "Programador Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Arias Ramirez David Fernando", "cargo": "Nivel I Laboratorio", "ceco": "Cabs Produccion"}, {"nombre": "Ariza Navarro Sergio Daniel", "cargo": "Programador Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Arroyo Villadiego Alejandro De Jesus", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Artunduaga Castaño Jose Orlando", "cargo": "Operario Maquina Convencional", "ceco": "Cabs Produccion"}, {"nombre": "Avella Carranza Yeisson Leonardo", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Baez Vera Cristian Andres", "cargo": "Programador Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Baron Baron Brayan Steven", "cargo": "Aprendiz Etapa Lectiva", "ceco": "Cabs Produccion"}, {"nombre": "Beleño Ladino Deyvis Nolberto", "cargo": "Operario Torno Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Beltran Peña Omar Yesid", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Berbeo Osorio John Alexander", "cargo": "Gerente De Ventas", "ceco": "Cabs Produccion"}, {"nombre": "Bermudez Moreno Yamile Andrea", "cargo": "Lider Cartera", "ceco": "Financiera Admon"}, {"nombre": "Bernal Puerto Johann Alexander", "cargo": "Nivel Ii A (Cargo Critico)", "ceco": "Cabs Ventas"}, {"nombre": "Blandon Morales Jose Daniel", "cargo": "Nivel I", "ceco": "Cabs Ventas"}, {"nombre": "Blandon Vargas John Alexander", "cargo": "Operario Fresa Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Bravo Castrillon Jorge Hernan", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Buitrago Buitrago Luis Ernesto", "cargo": "Operario Maquina Convencional", "ceco": "Cabs Produccion"}, {"nombre": "Buitrago Sanchez Bernando Adolfo", "cargo": "Gestor Comercial", "ceco": "Cabs Ventas"}, {"nombre": "Camelo Melo Jose David", "cargo": "Supervisor De Planta", "ceco": "Cabs Produccion"}, {"nombre": "Camelo Melo Luis Alberto", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Campo Alvarez Santiago", "cargo": "Tornero Ajustador", "ceco": "Cabs Produccion"}, {"nombre": "Campo Saenz Eguis David", "cargo": "Operario Maquina Convencional", "ceco": "Cabs Produccion"}, {"nombre": "Cano Cruz David Estevan", "cargo": "Nivel Ii (Alistamiento Y Despacho)", "ceco": "Cabs Produccion"}, {"nombre": "Canro Poveda Sandra Paola", "cargo": "Nivel Ii A (Cargo Critico)", "ceco": "Cabs Produccion"}, {"nombre": "Casado Forero Wilfran", "cargo": "Coordinador Despachos", "ceco": "Cabs Produccion"}, {"nombre": "Casanova Buenaver Mileydi Carolina", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Castaño Duran Leydi Yisetd", "cargo": "Analista Contable", "ceco": "Financiera Admon"}, {"nombre": "Chasque Piñacue Sergio Alejandro", "cargo": "Aprendiz Etapa Practica", "ceco": "Cabs Produccion"}, {"nombre": "Chaves Sanchez Jaime Aldemar", "cargo": "Diseñador Programador", "ceco": "Cabs Produccion"}, {"nombre": "Correa Zuluaga Lina Paola", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Corredor Vidal Jeisson Sebastian", "cargo": "Nivel I", "ceco": "Cabs Ventas"}, {"nombre": "Cruz Arias Marlis Cristina", "cargo": "Nivel Ii (Alistamiento Y Despacho)", "ceco": "Cabs Produccion"}, {"nombre": "Cubillos Acosta Yessica Maribel", "cargo": "Lider Tesoreria", "ceco": "Financiera Admon"}, {"nombre": "Cuervo Heredia Mateo Nicolas", "cargo": "Nivel Ii (Alistamiento Y Despacho)", "ceco": "Cabs Produccion"}, {"nombre": "Delgado Torres Johan Adrian", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Duarte Galeano Humberto", "cargo": "Operario Maquina Convencional", "ceco": "Cabs Produccion"}, {"nombre": "Duran Rolon Pablo", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Erazo  Roman Eldifonso", "cargo": "Supervisor De Planta", "ceco": "Cabs Produccion"}, {"nombre": "Erazo Gomez Santiago David", "cargo": "Operario Torno Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Espitia Tellez Gustad", "cargo": "Troquelador", "ceco": "Cabs Produccion"}, {"nombre": "Fandiño Buitrago Zaida Natalia", "cargo": "Coordinadora Talento Humano", "ceco": "Talento Humano Admon"}, {"nombre": "Florez Parada Fredy Alexander", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Florez Walber Enrique", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Florian Sanabria Jairo Stiven", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Forero Forero Excehomo Abel", "cargo": "Auxiliar Mantenimiento", "ceco": "Cabs Produccion"}, {"nombre": "Galeano Ortiz Johan Yesit", "cargo": "Aprendiz Etapa Lectiva", "ceco": "Cabs Produccion"}, {"nombre": "Galindo Cruz Jhon Fredy", "cargo": "Operario Torno Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Gama Peña Reinaldo Arcenio", "cargo": "Tornero Ajustador", "ceco": "Cabs Produccion"}, {"nombre": "Garcia Ferrucho Stefani", "cargo": "Operario Fresa Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Garcia Piñeros Jhonathan David", "cargo": "Coordinador Publicidad", "ceco": "Cabs Ventas"}, {"nombre": "Gomez Amaya Nathalia", "cargo": "Nivel Ii (Alistamiento Y Despacho)", "ceco": "Cabs Produccion"}, {"nombre": "Gomez Gomez Ruben Dario", "cargo": "Operario Maquina Convencional", "ceco": "Cabs Produccion"}, {"nombre": "Gonzalez Bustamante Eduard Ferney", "cargo": "Gerente Produccion", "ceco": "Cabs Produccion"}, {"nombre": "Gonzalez Pinzon Karen Nataly", "cargo": "Lider De Ventas Internacionales", "ceco": "Cabs Ventas"}, {"nombre": "Gonzalez Sotomayor Junior Javier", "cargo": "Gerente Ventas Internacionales", "ceco": "Comercial Ventas"}, {"nombre": "Gonzalez Tenjica Juan David", "cargo": "Operario Torno Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Gualteros Moreno Carlos Andres", "cargo": "Lider Cedi", "ceco": "Cabs Produccion"}, {"nombre": "Guerrero Castro Pedro Wadyth", "cargo": "Operario Maquina Convencional", "ceco": "Cabs Produccion"}, {"nombre": "Guerrero Leonel John Alexander", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Guerrero Vasquez Jhon Fauder", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Hernandez Ascuntar Juan Pablo", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Herrera Torrejano Jhon Manuel", "cargo": "Operario Torno Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Holguin Cubillos Daniel", "cargo": "Operario Torno Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Huertas Celis Huri Andres", "cargo": "Conductor", "ceco": "Cabs Produccion"}, {"nombre": "Hurtado Escobar Leydi Johana", "cargo": "Gerente Talento Humano Y Sg-Sst", "ceco": "Talento Humano Admon"}, {"nombre": "Izquierdo Avilez Deimer Jose", "cargo": "Auxiliar Planta Almacen", "ceco": "Cabs Produccion"}, {"nombre": "Jaramillo Sanchez Jesus David", "cargo": "Nivel Ii", "ceco": "Cabs Produccion"}, {"nombre": "Jimenez Cely Miguel Angel", "cargo": "Aprendiz Etapa Practica", "ceco": "Cabs Produccion"}, {"nombre": "Jimenez Molina Cesar Geovanny", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Jimenez Vela Jaime Percy", "cargo": "Mensajero", "ceco": "Talento Humano Admon"}, {"nombre": "Leguizamon Lopez Juan Sebastian", "cargo": "Nivel I", "ceco": "Cabs Produccion"}, {"nombre": "Lopez Pertuz Gilma Paola", "cargo": "Nivel I", "ceco": "Cabs Produccion"}, {"nombre": "Lucumi Villegas Jose Luis", "cargo": "Soldador", "ceco": "Cabs Produccion"}, {"nombre": "Mancipe Sanchez Yuber Alexander", "cargo": "Nivel I", "ceco": "Cabs Produccion"}, {"nombre": "Manga Torres Jennyfer Geraldine", "cargo": "Lider De Compras E Importaciones", "ceco": "Cabs Admon"}, {"nombre": "Manjarres Ordoñez Fabio Andres", "cargo": "Operario Torno Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Martin Falla Julio Andres", "cargo": "Lider Publicidad", "ceco": "Cabs Produccion"}, {"nombre": "Martinez Barrios Pablo Enrique", "cargo": "Operario Fresa Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Martinez Camargo Cesar Augusto", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Martinez Moreno Miguel Angel", "cargo": "Supervisor De Planta", "ceco": "Cabs Produccion"}, {"nombre": "Martinez Rojas Juan Carlos", "cargo": "Coordinador Empaque", "ceco": "Cabs Produccion"}, {"nombre": "Medina Rodriguez Gustavo Andres", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Medrano Osorio Gustavo Rafael", "cargo": "Operario Maquina Convencional", "ceco": "Cabs Produccion"}, {"nombre": "Mendoza Urbina German Ricardo", "cargo": "Gerente De Ventas", "ceco": "Comercial Ventas"}, {"nombre": "Mercado Fontalvo Ali David", "cargo": "Operario Maquina Convencional", "ceco": "Cabs Produccion"}, {"nombre": "Metaute Matta Mario Alejandro", "cargo": "Nivel I", "ceco": "Cabs Admon"}, {"nombre": "Mican Riveros Alejandro", "cargo": "Nivel Ii A (Cargo Critico)", "ceco": "Cabs Ventas"}, {"nombre": "Millan Gonzalez Jorge Leonardo", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Moncada Merchan Deiver Alberto", "cargo": "Nivel Ii A (Almacenamiento Y Curso Alturas)", "ceco": "Cabs Produccion"}, {"nombre": "Montaña Rodriguez Luis Alberto", "cargo": "Pintor", "ceco": "Cabs Produccion"}, {"nombre": "Montufar Fernandez Jesus Eduardo", "cargo": "Aprendiz Etapa Lectiva", "ceco": "Cabs Produccion"}, {"nombre": "Moreno Garnica Alvaro Andres", "cargo": "Programador Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Navarro Serpa Jorge Luis", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Neusa Soler Laura Milena", "cargo": "Contadora", "ceco": "Cabs Produccion"}, {"nombre": "Novoa Ricaute Bryan Andres", "cargo": "Nivel I", "ceco": "Cabs Ventas"}, {"nombre": "Numpaque Becerra Jairo", "cargo": "Lider De Diseño Y Desarrollo", "ceco": "Cabs Admon"}, {"nombre": "Ochoa Numpaque Sergio Andres", "cargo": "Operario Fresa Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Ortiz Ruiz Juan Manuel", "cargo": "Aprendiz Etapa Lectiva", "ceco": "Cabs Produccion"}, {"nombre": "Osorio Gomez Jonathan Israel", "cargo": "Coordinador Empaque", "ceco": "Cabs Ventas"}, {"nombre": "Osorio Roa Claudia Damaris", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Paez Larrota Rafael Orlando", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Peralta Baron Paula Andrea", "cargo": "Nivel I", "ceco": "Cabs Ventas"}, {"nombre": "Peralta Valbuena Yimmy", "cargo": "Nivel Ii A (Almacenamiento Y Curso Alturas)", "ceco": "Cabs Ventas"}, {"nombre": "Perdomo Cuellar Jose Leonardo", "cargo": "Operario Torno Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Perdomo Peña Maryoly", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Perilla Niño Zayda Milena", "cargo": "Lider De Compras E Importaciones", "ceco": "Cabs Admon"}, {"nombre": "Pestana Correa Andres Aldair", "cargo": "Gestor Comercial", "ceco": "Cabs Ventas"}, {"nombre": "Peñaloza Farfan Luis Carlos", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Quiceno Buitrago Jose Didier", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Quintana Poveda Jaidan Stip", "cargo": "Aprendiz Etapa Practica", "ceco": "Cabs Produccion"}, {"nombre": "Quintero Patiño Damian Ricardo", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Ramirez Ramos Johan Sebastian", "cargo": "Operario Maquina Convencional", "ceco": "Cabs Produccion"}, {"nombre": "Ramos Rodriguez Jose Ricardo", "cargo": "Programador Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Real Sanchez Anderson Nicolas", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Reales Hernandez Edison", "cargo": "Operario Fresa Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Riaño Camacho Luis Felipe", "cargo": "Operario Torno Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Rincon Angel Michael Stivens", "cargo": "Nivel Ii (Alistamiento Y Despacho)", "ceco": "Cabs Ventas"}, {"nombre": "Rincon Ramirez Jonathan Daniel", "cargo": "Coordinador Taller", "ceco": "Cabs Produccion"}, {"nombre": "Rios Bejarano Luz Herminda", "cargo": "Lider Compras Almacen Y Planta", "ceco": "Talento Humano Admon"}, {"nombre": "Rivera Gutierrez Daniel", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Rivera Jaramillo Oscar Alejandro", "cargo": "Nivel Ii A (Almacenamiento Y Curso Alturas)", "ceco": "Cabs Produccion"}, {"nombre": "Robayo Achury Jose Alexander", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Rodriguez Gonzalez Yader Enrique", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Rodriguez Hincapie Juan Jairo", "cargo": "Operario Maquina Convencional", "ceco": "Cabs Produccion"}, {"nombre": "Rodriguez Mesa Leidy Johana", "cargo": "Nivel I", "ceco": "Cabs Ventas"}, {"nombre": "Rodriguez Reinoso Jose Ancizar", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Rodriguez Rodriguez Jhoan", "cargo": "Operario Maquina Convencional", "ceco": "Cabs Produccion"}, {"nombre": "Rodriguez Rodriguez Luis Miguel", "cargo": "Operario Torno Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Rodriguez Sandoval Sedelin Isacc", "cargo": "Supervisor De Planta", "ceco": "Cabs Produccion"}, {"nombre": "Romero Barreto Andres Felipe", "cargo": "Inspector Calidad", "ceco": "Cabs Laboratorio"}, {"nombre": "Romero Marroquin Jhonattan Alexander", "cargo": "Gerente Produccion", "ceco": "Cabs Produccion"}, {"nombre": "Rozo Sanabria Luisa Fernanda", "cargo": "Nivel I", "ceco": "Cabs Produccion"}, {"nombre": "Ruiz Niño Angela Maria", "cargo": "Nivel Ii A (Cargo Critico)", "ceco": "Cabs Produccion"}, {"nombre": "Saavedra Cortes Gustavo", "cargo": "Operario Maquina Convencional", "ceco": "Cabs Produccion"}, {"nombre": "Salas Martinez Kevin Guisseppe", "cargo": "Nivel Ii A (Cargo Critico)", "ceco": "Cabs Ventas"}, {"nombre": "Sanchez Navarrete Brayan Andres", "cargo": "Operario Maquina Convencional", "ceco": "Cabs Produccion"}, {"nombre": "Sandoval Sanchez Jorge Alberto", "cargo": "Lider De Seguridad", "ceco": "Seguridad Admon"}, {"nombre": "Sarmiento Barrera Fredy Alejandro", "cargo": "Auxiliar Planta Almacen", "ceco": "Cabs Produccion"}, {"nombre": "Sepulveda Morelo Axel Andres", "cargo": "Operario Fresa Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Serrano Galviz Yohan Augusto", "cargo": "Gestor Comercial", "ceco": "Comercial Ventas"}, {"nombre": "Sierra Franco Heimer Alejandro", "cargo": "Auxiliar De Control", "ceco": "Seguridad Admon"}, {"nombre": "Sierra Jose Miguel", "cargo": "Nivel I", "ceco": "Cabs Produccion"}, {"nombre": "Solano Torres Andrey Alexander", "cargo": "Operario Torno Cnc", "ceco": "Cabs Produccion"}, {"nombre": "Soler Rodriguez Nelson Alesix", "cargo": "Lider De Ventas Internacionales", "ceco": "Cabs Ventas"}, {"nombre": "Suarez Holguin Carlos Alberto", "cargo": "Operario Maquina Convencional", "ceco": "Cabs Produccion"}, {"nombre": "Suarez Puentes Mariana", "cargo": "Coordinador Publicidad", "ceco": "Cabs Produccion"}, {"nombre": "Tolosa Quiroga Daniela Alexandra", "cargo": "Nivel I", "ceco": "Cabs Ventas"}, {"nombre": "Tuñon Navas Dilson", "cargo": "Operario Maquina Convencional", "ceco": "Cabs Produccion"}, {"nombre": "Urrea Suarez Hugo", "cargo": "Coordinador Empaque", "ceco": "Cabs Ventas"}, {"nombre": "Urueña Molina Jorge Enrique", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Vanegas Rubiano Luis Eduardo", "cargo": "Auxiliar Planta", "ceco": "Cabs Produccion"}, {"nombre": "Vargas Velasquez Nelson Andres", "cargo": "Soldador", "ceco": "Cabs Produccion"}, {"nombre": "Vargas Villamil Jehuyson Hernan", "cargo": "Pintor", "ceco": "Cabs Produccion"}, {"nombre": "Vasquez Villate Jeisson Jair", "cargo": "Nivel I", "ceco": "Cabs Produccion"}, {"nombre": "Vique Merchan Jose Leandro", "cargo": "Nivel I", "ceco": "Cabs Ventas"}, {"nombre": "Wilches Betancourt Cristian David", "cargo": "Gestor Comercial Corporativo", "ceco": "Comercial Ventas"}, {"nombre": "Yepes Gonzalez Ivan Leonardo", "cargo": "Gerente Calidad", "ceco": "Calidad"}, {"nombre": "Zuñiga Gachavoque Edyson Javier", "cargo": "Operario Torno Cnc", "ceco": "Cabs Produccion"}];
+
 window.addEventListener('DOMContentLoaded', function() {
-  cargarEmpleados();
+  empleados = DATOS_EMPLEADOS;
+  poblarSelect();
 });
 let pasoActual = 0;
 const TOTAL_PASOS = 5;
@@ -604,17 +607,7 @@ let contadorProcesos = 0;
 // ─────────────────────────────────────────────────
 //  CARGA DEL EXCEL
 // ─────────────────────────────────────────────────
-async function cargarEmpleados() {
-  try {
-    const resp = await fetch('empleados.json');
-    if (!resp.ok) throw new Error('No se pudo cargar el listado. Código: ' + resp.status);
-    const data = await resp.json();
-    empleados = data;
-    poblarSelect();
-  } catch (err) {
-    mostrarError('No se pudo cargar el listado de empleados. Detalle: ' + err.message);
-  }
-}
+
 
 function poblarSelect() {
   const sel = document.getElementById('selNombre');
@@ -653,6 +646,35 @@ function elegirRadio(grupo, el, valor) {
   document.querySelectorAll(`#${grupo} .opcion-radio`).forEach(b => b.classList.remove('seleccionado'));
   el.classList.add('seleccionado');
   radiosSeleccionados[grupo] = valor;
+  // Si en paso 2 dice "No por ahora", saltar directo al resumen final
+  if (grupo === 'rg_confirma' && valor === 'No por ahora') {
+    document.getElementById('btnSiguiente').textContent = 'Finalizar →';
+    document.getElementById('btnSiguiente').onclick = function() { irAlResumen(); };
+  } else if (grupo === 'rg_confirma') {
+    document.getElementById('btnSiguiente').textContent = 'Siguiente →';
+    document.getElementById('btnSiguiente').onclick = function() { navegar(1); };
+  }
+}
+
+function irAlResumen() {
+  // Ocultar paso actual
+  document.getElementById(`paso${pasoActual}`).classList.remove('activa');
+  document.getElementById(`pill${pasoActual}`).classList.remove('activo');
+  document.getElementById(`pill${pasoActual}`).classList.add('hecho');
+  // Marcar pills intermedios como hechos
+  for (let i = pasoActual + 1; i < TOTAL_PASOS - 1; i++) {
+    document.getElementById(`pill${i}`).classList.add('hecho');
+  }
+  // Ir al último paso (resumen)
+  pasoActual = TOTAL_PASOS - 1;
+  document.getElementById(`paso${pasoActual}`).classList.add('activa');
+  document.getElementById(`pill${pasoActual}`).classList.remove('hecho');
+  document.getElementById(`pill${pasoActual}`).classList.add('activo');
+  document.getElementById('btnAnterior').style.visibility = 'visible';
+  document.getElementById('btnSiguiente').style.display = 'none';
+  document.getElementById('textoStep').textContent = `Paso ${pasoActual + 1} de ${TOTAL_PASOS}`;
+  construirResumen();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function marcarCheck(el) {
@@ -682,8 +704,8 @@ function agregarProceso() {
     </div>
     <div class="dos-col">
       <div class="campo">
-        <label>Tiempo por ejecución (min)</label>
-        <input type="text" id="ptiempo_${idx}" placeholder="Ej: 45">
+        <label>Tiempo por ejecución (horas)</label>
+        <input type="text" id="ptiempo_${idx}" placeholder="Ej: 1.5">
       </div>
       <div class="campo">
         <label>Frecuencia</label>
@@ -714,8 +736,8 @@ function calcularROI() {
 
   if (t1 > 0 && v > 0) {
     document.getElementById('resultado_roi').style.display = 'block';
-    const hMes = +(t1 * v * p / 60).toFixed(1);
-    const hLib = +(Math.max(0, (t1 - t2) * v * p / 60)).toFixed(1);
+    const hMes = +(t1 * v * p).toFixed(1);
+    const hLib = +(Math.max(0, (t1 - t2) * v * p)).toFixed(1);
     const pct  = t1 > 0 ? Math.max(0, Math.round((1 - t2 / t1) * 100)) : 0;
     document.getElementById('roi_horas').textContent     = hMes + 'h';
     document.getElementById('roi_reduccion').textContent = pct + '%';
@@ -746,7 +768,7 @@ function construirResumen() {
   const t1 = document.getElementById('inp_t1').value;
   const v  = document.getElementById('inp_v').value;
   const hMes = t1 && v
-    ? ((parseFloat(t1) * parseFloat(v) * (parseFloat(document.getElementById('inp_p').value) || 1)) / 60).toFixed(1) + 'h'
+    ? (parseFloat(t1) * parseFloat(v) * (parseFloat(document.getElementById('inp_p').value) || 1)).toFixed(1) + 'h'
     : '—';
 
   const badgeClass = prioridad === 'Alta' ? 'badge-alta' : prioridad === 'Media' ? 'badge-media' : 'badge-baja';
@@ -762,7 +784,7 @@ function construirResumen() {
       <div class="resumen-item">
         <div class="resumen-etiq">Proceso ${idx + 1}</div>
         <div class="resumen-valor"><strong>${n}</strong></div>
-        <div style="font-size:12px;color:var(--texto-suave);margin-top:3px">${s} · ${t} min · ${f}</div>
+        <div style="font-size:12px;color:var(--texto-suave);margin-top:3px">${s} · ${t}h · ${f}</div>
       </div>`;
   });
 
