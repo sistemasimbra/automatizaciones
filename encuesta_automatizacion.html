@@ -6,7 +6,7 @@
 <title>Encuesta de Procesos - Automatización e IA</title>
 
 <!-- SheetJS para leer el Excel -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 
 <style>
   :root {
@@ -594,7 +594,7 @@ let empleados = [];
 
 // Cargar automáticamente al abrir la página
 window.addEventListener('DOMContentLoaded', function() {
-  cargarDesdeSharePoint();
+  cargarEmpleados();
 });
 let pasoActual = 0;
 const TOTAL_PASOS = 5;
@@ -604,103 +604,33 @@ let contadorProcesos = 0;
 // ─────────────────────────────────────────────────
 //  CARGA DEL EXCEL
 // ─────────────────────────────────────────────────
-const EXCEL_URL = 'https://imbrarepuestosit-my.sharepoint.com/:x:/g/personal/sistemas_imbrarepuestos_com/IQBPOVijHcwEQL8fjllgFLqbAYd-KujN7mrGT7LhX4kt3us?download=1';
-
-async function cargarDesdeSharePoint() {
+async function cargarEmpleados() {
   try {
-    const resp = await fetch(EXCEL_URL);
-    if (!resp.ok) throw new Error('No se pudo descargar el archivo. Código: ' + resp.status);
-    const buffer = await resp.arrayBuffer();
-    procesarExcel(buffer);
+    const resp = await fetch('empleados.json');
+    if (!resp.ok) throw new Error('No se pudo cargar el listado. Código: ' + resp.status);
+    const data = await resp.json();
+    empleados = data;
+    poblarSelect();
   } catch (err) {
-    mostrarError('No se pudo cargar el archivo de empleados. Verifica tu conexión o contacta a sistemas. Detalle: ' + err.message);
+    mostrarError('No se pudo cargar el listado de empleados. Detalle: ' + err.message);
   }
 }
 
-function procesarExcel(buffer) {
-  try {
-      // 1. Leer workbook
-      const data = new Uint8Array(buffer);
-      const wb = XLSX.read(data, { type: 'array' });
+function poblarSelect() {
+  const sel = document.getElementById('selNombre');
+  sel.innerHTML = '<option value="">— Selecciona tu nombre —</option>';
+  for (let i = 0; i < empleados.length; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = empleados[i].nombre;
+    sel.appendChild(opt);
+  }
+  document.getElementById('pantallaCarga').style.display = 'none';
+  document.getElementById('formulario').style.display = 'block';
+  agregarProceso();
+}
 
-      // 2. Elegir hoja — buscar ACTIVOS sin .includes()
-      let nombreHoja = wb.SheetNames[0];
-      for (let s = 0; s < wb.SheetNames.length; s++) {
-        if (String(wb.SheetNames[s]).toUpperCase().trim() === 'ACTIVOS') {
-          nombreHoja = wb.SheetNames[s]; break;
-        }
-      }
-      const hoja = wb.Sheets[nombreHoja];
-      if (!hoja) { mostrarError('No se pudo abrir la hoja del archivo.'); return; }
-
-      // 3. Convertir a array con defval:'' para evitar undefined
-      const filas = XLSX.utils.sheet_to_json(hoja, { header: 1, defval: '' });
-      if (!filas || filas.length === 0) { mostrarError('El archivo parece estar vacío.'); return; }
-
-      // 4. Detectar fila de encabezados (buscando NOMBRE y CARGO)
-      let filaEnc = -1, colNombre = -1, colCargo = -1, colSalario = -1, colAuxilio = -1, colCeco = -1;
-      for (let i = 0; i < Math.min(10, filas.length); i++) {
-        const fila = filas[i];
-        if (!Array.isArray(fila) || fila.length === 0) continue;
-        const celdas = fila.map(function(c) { return String(c == null ? '' : c).toUpperCase().trim(); });
-        let iN = -1, iC = -1;
-        for (let j = 0; j < celdas.length; j++) {
-          if (iN < 0 && celdas[j].indexOf('NOMBRE') >= 0) iN = j;
-          if (iC < 0 && celdas[j].indexOf('CARGO')  >= 0) iC = j;
-        }
-        if (iN >= 0 && iC >= 0) {
-          filaEnc = i; colNombre = iN; colCargo = iC;
-          for (let j = 0; j < celdas.length; j++) {
-            if (colSalario < 0 && celdas[j].indexOf('SALARIO')  >= 0) colSalario = j;
-            if (colAuxilio < 0 && (celdas[j].indexOf('AUXILIO') >= 0 || celdas[j].indexOf('ALIMENT') >= 0)) colAuxilio = j;
-            if (colCeco   < 0 && celdas[j].indexOf('CECO')     >= 0) colCeco = j;
-          }
-          break;
-        }
-      }
-      if (filaEnc < 0) {
-        mostrarError('No se encontraron las columnas NOMBRE y CARGO. Verifica que el archivo sea correcto.');
-        return;
-      }
-
-      // 5. Extraer empleados de forma defensiva
-      empleados = [];
-      for (let i = filaEnc + 1; i < filas.length; i++) {
-        const fila = filas[i];
-        if (!Array.isArray(fila)) continue;
-        const nombre = String(fila[colNombre] == null ? '' : fila[colNombre]).trim();
-        if (!nombre) continue;
-        const cargo   = String(fila[colCargo]   == null ? '' : fila[colCargo]).trim();
-        const salario = colSalario >= 0 ? (parseFloat(fila[colSalario]) || 0) : 0;
-        const auxilio = colAuxilio >= 0 ? (parseFloat(fila[colAuxilio]) || 0) : 0;
-        const ceco    = colCeco    >= 0 ? String(fila[colCeco] == null ? '' : fila[colCeco]).trim() : '';
-        empleados.push({ nombre: toTitleCase(nombre), cargo: toTitleCase(cargo), salario: salario, auxilio: auxilio, ceco: ceco });
-      }
-      if (empleados.length === 0) {
-        mostrarError('No se encontraron datos de empleados. Verifica que haya filas debajo de los encabezados.');
-        return;
-      }
-
-      // 6. Poblar select
-      empleados.sort(function(a, b) { return a.nombre.localeCompare(b.nombre); });
-      const sel = document.getElementById('selNombre');
-      sel.innerHTML = '<option value="">— Selecciona tu nombre —</option>';
-      for (let i = 0; i < empleados.length; i++) {
-        const opt = document.createElement('option');
-        opt.value = i;
-        opt.textContent = empleados[i].nombre;
-        sel.appendChild(opt);
-      }
-
-      // 7. Mostrar formulario
-      document.getElementById('pantallaCarga').style.display = 'none';
-      document.getElementById('formulario').style.display = 'block';
-      agregarProceso();
-
-    } catch (err) {
-      mostrarError('Error al procesar el archivo: ' + err.message);
-    }
-  } catch(err) {
+ catch(err) {
     mostrarError('Error al procesar el archivo: ' + err.message);
   }
 }
